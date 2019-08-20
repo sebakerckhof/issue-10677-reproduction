@@ -24,9 +24,39 @@ Meteor.methods({
             const insertOpPromises =
                 new Array(numInserts)
                     .fill(null)
+                    .map((_, index) => {
+                        // .insert, .update, etc. on a Mongo.Collection.rawCollection() all return promises
+                        return MyCollection.rawCollection().insert({
+                            index,
+                            script: 'testPromiseDotAll',
+                            ...doc
+                        });
+                    });
+            await Promise.all(insertOpPromises);
+        };
+
+        console.log('testPromiseDotAll starting');
+        const timeBefore = Date.now();
+        awaitPromiseSync(makePromise());
+        const timeAfter = Date.now();
+        console.log('testPromiseDotAll finished in', timeAfter - timeBefore);
+    },
+    'testPromiseDotAllNoRawCollection'({ numInserts = 1000, doc = {} } = {}) {
+        this.unblock(); // Make sure all methods run in separate fibers by unblocking at the top of each
+
+        check(numInserts, Number);
+        check(doc, Object);
+
+        const makePromise = async () => {
+            const insertOpPromises =
+                new Array(numInserts)
+                    .fill(null)
                     .map(async (_, index) => {
                         // .insert, .update, etc. on a Mongo.Collection.rawCollection() all return promises
-                        await new Promise((resolve, reject) => MyCollection.insert({ index, script: 'testPromiseDotAll', ...doc }, (e, r) => {
+                        await new Promise((resolve, reject) => MyCollection.insert({
+                            index,
+                            script: 'testPromiseDotAll', ...doc
+                        }, (e, r) => {
                             if (e) {
                                 reject(e);
                             } else {
@@ -37,11 +67,11 @@ Meteor.methods({
             await Promise.all(insertOpPromises);
         };
 
-        console.log('testPromiseDotAll starting');
+        console.log('testPromiseDotAllNoRawCollection starting');
         const timeBefore = Date.now();
         awaitPromiseSync(makePromise());
         const timeAfter = Date.now();
-        console.log('testPromiseDotAll finished in', timeAfter - timeBefore);
+        console.log('testPromiseDotAllNoRawCollection finished in', timeAfter - timeBefore);
     },
     'testSequential'({ numInserts = 1000, doc = {} } = {}) {
         this.unblock(); // Make sure all methods run in separate fibers by unblocking at the top of each
