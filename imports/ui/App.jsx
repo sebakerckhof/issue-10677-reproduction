@@ -10,7 +10,10 @@ class App extends React.Component {
     render() {
         return (
             <div>
-                <h1>Reproduction</h1>
+                <h1>Meteor Issue #10677 Reproduction</h1>
+                <a href={'https://github.com/meteor/meteor/issues/10677'}>
+                    https://github.com/meteor/meteor/issues/10677
+                </a>
                 <ol>
                     <li>
                         <span>
